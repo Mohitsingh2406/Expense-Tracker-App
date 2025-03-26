@@ -5,12 +5,25 @@ import Typo from '@/components/Typo'
 import { colors, spacingX, spacingY } from '@/constants/theme'
 import { verticalScale } from '@/utils/styling'
 import BackButton from '@/components/BackButton'
-
+import Input from '@/components/Input'
+import * as Icons from 'phosphor-react-native'
 const Login = () => {
     return (
         <ScreenWrapper>
             <View style={styles.container}>
-                <BackButton/>
+                <BackButton iconSize={28}/>
+
+                <View style={{gap:5, marginTop:spacingY._20}}>
+                    <Typo size={30} fontWeight={"800"}>Hey,</Typo>
+                    <Typo size={30} fontWeight={"800"}>Welcome Back</Typo>
+                </View>
+
+                <View style={styles.from}>
+                    <Typo size={16} color={colors.textLighter}>
+                        Login Now to track all your expenses
+                    </Typo>
+                    <Input placeholder='Enter Your Email'/>
+                </View>
             </View>
         </ScreenWrapper>
     )

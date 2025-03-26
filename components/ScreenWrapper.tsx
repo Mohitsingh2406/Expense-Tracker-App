@@ -6,11 +6,11 @@ import { colors } from '@/constants/theme';
 const {height} = Dimensions.get("window");
 
 const ScreenWrapper = ({ style, children }: ScreenWrapperProps) => {
-    // let paddingTop = Platform.OS === "android" ? height * 0.06 : 50;
+    let paddingTop = Platform.OS === "android" ? height * 0.02 : 50;
     return (
         <View
             style={[{
-                // paddingTop,
+                paddingTop,
                 flex: 1,
                 backgroundColor: colors.neutral900
             },
