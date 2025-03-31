@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
             if(docSnap.exists()){
                 const data = docSnap.data();
                 const userData: UserType = {
-                    uid: data.uid,
+                    uid: data?.uid,
                     email: data.email || null,
                     name: data.name || null,
                     image: data.image || null,

@@ -1,6 +1,6 @@
 import { firestore } from "@/config/firebase";
 import { ResponseType, UserDataType } from "@/types";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc,updateDoc } from "firebase/firestore";
 import { uploadImageToCloudinary } from "./imageServices";
 
 
@@ -28,7 +28,7 @@ export const updateUser = async(
 
         return{success:true, msg:'updated successfully'}
     } catch(error:any){
-        console.log('error updating' , error)
+        console.log('error updating user: ' , error)
         return {success:false, msg:error?.message}
     }
 }
