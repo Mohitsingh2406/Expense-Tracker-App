@@ -24,6 +24,7 @@ const WalletListItem = ({
     )
 }
 
+
 export default WalletListItem
 
 const styles = StyleSheet.create({
