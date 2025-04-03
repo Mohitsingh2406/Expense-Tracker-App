@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/authContext'
 import { verticalScale } from '@/utils/styling'
 import * as Icons from 'phosphor-react-native'
 import HomeCard from '@/components/HomeCard'
+import TransactionList from '@/components/TransactionList'
 
 const Home = () => {
     const {user} = useAuth();
@@ -37,6 +38,8 @@ const Home = () => {
                     <View>
                         <HomeCard/>
                     </View>
+
+                    <TransactionList data={[1,2,3]} loading={false} emptyListMessage='No Transactions Added Yet!' title='Recent Transaction'/>
                 </ScrollView>
             </View>
         </ScreenWrapper>
