@@ -1,4 +1,4 @@
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { colors, radius, spacingX, spacingY } from '@/constants/theme'
 import { scale, verticalScale } from '@/utils/styling'
@@ -23,6 +23,8 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { expenseCategories, transactionTypes } from '@/constants/data'
 import useFetchData from '@/hooks/useFetchData'
 import { orderBy, where } from 'firebase/firestore'
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { createOrUpdateTransaction } from '@/services/transactionServices'
 
 const TransactionModal = () => {
     const { user } = useAuth()
@@ -36,6 +38,7 @@ const TransactionModal = () => {
         image:null
     })
     const [loading, setLoading] = useState(false)
+    const [showDatePicker, setShowDatePicker] = useState(false)
     const router = useRouter()
 
     const {data:wallets ,error:walletError,loading:walletLoading}=useFetchData<WalletType>('wallets',[
@@ -45,6 +48,12 @@ const TransactionModal = () => {
   
 
     const oldTransaction :{name: string, image:string, id:string} = useLocalSearchParams()
+
+    const onDateChange = (event: any, selectedDate: any) => {
+      const currentDate = selectedDate || transaction.date
+      setTransaction({...transaction , date:currentDate})
+      setShowDatePicker(Platform.OS == 'ios' ? true : false)
+    };
 
     // useEffect(()=>{
     //     if(oldTransaction?.id){
@@ -56,28 +65,34 @@ const TransactionModal = () => {
     // },[])
 
     const onSubmit = async () => {
-        // let { name, image } = transaction;
-        // if (!name.trim() || !image) {
-        //     Alert.alert('Transaction', 'Please fill all the fields')
-        //     return;
-        // }
+        const {type,amount,description,category,date,walletId,image} = transaction
 
-        // const data : WalletType={
-        //     name,
-        //     image,
-        //     uid:user?.uid
-        // }
-        // if(oldTransaction?.id) data.id=oldTransaction?.id
-        // setLoading(true)
-        // const res = await createOrUpdateWallet(data)
-        // setLoading(false)
-        // // console.log('result: ',res)
-        // if (res.success) {
-        //     router.back()
-        // }
-        // else {
-        //     Alert.alert('User', res.msg)
-        // }
+        if(!walletId || !date || !amount ||(type == 'expense' && !category)) {
+          Alert.alert('Transaction','Please fill all the fields below')
+          return;
+        }
+
+        let transactionData:TransactionType = {
+          type,
+          amount,
+          description,
+          category,
+          date,
+          walletId,
+          image,
+          uid:user?.uid
+        }
+
+
+        setLoading(true)
+        const res = await createOrUpdateTransaction(transactionData)
+
+        setLoading(false)
+        if(res.success){
+          router.back()
+        } else{
+          Alert.alert('Transaction', res.msg)
+        }
     }
 
     const onDelete = async()=>{
@@ -119,7 +134,7 @@ const TransactionModal = () => {
 
                 <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
           <View style={styles.inputContainer}>  
-                        <Typo color={colors.neutral200}>Type</Typo>
+                        <Typo color={colors.neutral200} size={16}>Type</Typo>
           <Dropdown
           style={styles.dropdownContainer}
           activeColor={colors.neutral700}
@@ -142,7 +157,7 @@ const TransactionModal = () => {
         </View>
 
           <View style={styles.inputContainer}>  
-          <Typo color={colors.neutral200}>Wallet</Typo>
+          <Typo color={colors.neutral200} size={16}>Wallet</Typo>
           <Dropdown
           style={styles.dropdownContainer}
           activeColor={colors.neutral700}
@@ -171,7 +186,7 @@ const TransactionModal = () => {
           transaction.type=='expense' && (
 
         <View style={styles.inputContainer}>  
-          <Typo color={colors.neutral200}>Wallet</Typo>
+          <Typo color={colors.neutral200} size={16}>Expense Category</Typo>
           <Dropdown
           style={styles.dropdownContainer}
           activeColor={colors.neutral700}
@@ -195,7 +210,76 @@ const TransactionModal = () => {
           )
         }
                     <View style={styles.inputContainer}>
-                        <Typo color={colors.neutral200}>transaction Icon</Typo>
+                        <Typo color={colors.neutral200} size={16}>Date</Typo>
+                        { !showDatePicker && (
+                          <Pressable style={styles.dateInput} onPress={()=> setShowDatePicker(true)}>
+                            <Typo size={14}>
+                              {(transaction.date as Date).toLocaleDateString()}
+                            </Typo>
+                          </Pressable>
+                        )}
+
+                        {
+                          showDatePicker &&(
+                            <View style={Platform.OS == 'ios' && styles.iosDatePicker}>
+                              <DateTimePicker
+                                themeVariant='dark'
+                                value={transaction.date as Date}
+                                textColor={colors.white}
+                                mode='date'
+                                display={Platform.OS == 'ios' ? 'spinner' :'default'}
+                                onChange={onDateChange}
+                              />
+
+                              {Platform.OS == 'ios' && (
+                                <TouchableOpacity
+                                  style={styles.datePickerButton}
+                                  onPress={()=> setShowDatePicker(false)}
+                                >
+                                  <Typo size={15} fontWeight={'500'}>
+                                    OK
+                                  </Typo>
+                                </TouchableOpacity>
+                              )}
+                            </View>
+                          )
+                        }
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <Typo color={colors.neutral200} size={16}>Amount</Typo>
+                        <Input
+                            // placeholder='Salary'
+                            keyboardType='numeric'
+                            value={transaction.amount?.toString()}
+                            onChangeText={(value) => setTransaction({ ...transaction, amount:Number(value.replace(/[^0-9]/g,""))})}
+                        />
+                    </View>
+                    <View style={styles.inputContainer}>
+                      <View style={styles.flexRow}>
+                        <Typo color={colors.neutral200} size={16}>Description</Typo>
+                        <Typo color={colors.neutral500} size={14}>(optional)</Typo>
+                      </View>
+                        <Input
+                            // placeholder='Salary'
+                            value={transaction.description}
+                            multiline
+                            containerStyle={{
+                              flexDirection:'row',
+                              height:verticalScale(100),
+                              alignItems:'flex-start',
+                              paddingVertical:15,
+                            }}
+                            onChangeText={(value) => setTransaction({ ...transaction, description:value})}
+                        />
+                    </View>
+
+
+                    <View style={styles.inputContainer}>
+                    <View style={styles.flexRow}>
+                        <Typo color={colors.neutral200} size={16}>Receipt</Typo>
+                        <Typo color={colors.neutral500} size={14}>(optional)</Typo>
+                      </View>
                         <ImageUpload file={transaction.image}
                             onClear={()=>setTransaction({...transaction,image:null})}
                         onSelect={file=> setTransaction({...transaction,image:file})} placeholder='Upload Image'/>
@@ -221,7 +305,7 @@ const TransactionModal = () => {
                 )}
                 <Button onPress={onSubmit} loading={loading} style={{ flex: 1 }}>
                     <Typo color={colors.black} fontWeight={'700'}>
-                        {oldTransaction?.id ?"Update Wallet":"Add Wallet"}
+                        {oldTransaction?.id ?"Update":"Submit"}
                     </Typo>
                 </Button>
             </View>
