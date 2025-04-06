@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
-import { TransactionItemProps, TransactionListType } from '@/types'
+import { TransactionItemProps, TransactionListType, TransactionType } from '@/types'
 import { colors, radius, spacingX, spacingY } from '@/constants/theme'
 import { verticalScale } from '@/utils/styling'
 import Typo from './Typo'
@@ -9,14 +9,29 @@ import Loading from './Loading'
 import { expenseCategories, incomeCategory } from '@/constants/data'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { Timestamp } from 'firebase/firestore'
+import { useRouter } from 'expo-router'
 const TransactionList = ({
   data,
   title,
   loading,
   emptyListMessage
 }:TransactionListType )=> {
-  const handleClick = () => {
-    
+  const router = useRouter()
+  const handleClick = (item:TransactionType) => {
+    router.push({
+      pathname:'/(modals)/transactionModal',
+      params:{
+        id:item?.id,
+        type:item?.type,
+        date:(item.date as Timestamp)?.toDate()?.toISOString(),
+        amount:item?.amount?.toString(),
+        category:item?.category,
+        description:item?.description,
+        image:item?.image,
+        uid:item?.uid,
+        walletId:item?.walletId
+      }
+    })
   }
   return (
     <View style={styles.container}>
